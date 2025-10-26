@@ -89,4 +89,27 @@ router.patch('/users/:id', async (req, res) => {
   }
 });
 
+router.post('/users/logout', auth.auth, async (req, res) => {
+  try {
+    req.user.tokens = req.user.tokens.filter((token) => {
+      return token.token !== req.token;
+    });
+    await req.user.save();
+    res.send(req.user, 'logged Out!');
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+});
+
+router.post('/users/logoutAll', auth.auth, async (req, res) => {
+  try {
+    req.user.tokens = [];
+    await req.user.save();
+    console.log(req.user);
+    res.status(200).send(req.user, 'Logged out!');
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+});
+
 export default router;
