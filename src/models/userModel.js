@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
+import bcrypt from 'bcrypt';
 
 const userSchema = new mongoose.Schema(
   {
@@ -9,6 +10,13 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    password: {
+      type: String,
+      required: true,
+      minlength: 7,
+      maxlength: 1024,
+      trim: true,
+    },
     email: {
       type: String,
       required: true,
@@ -21,7 +29,6 @@ const userSchema = new mongoose.Schema(
         }
       },
     },
-
     age: {
       type: Number,
       default: 0,
@@ -36,6 +43,16 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+// Middleware
+userSchema.pre('save', async function (next) {
+  const user = this;
+  if (user.isModified('password')) {
+    user.password = await bcrypt.hash(user.password, 8);
+  }
+
+  next();
+});
 
 const User = mongoose.model('User', userSchema);
 

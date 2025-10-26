@@ -52,22 +52,26 @@ router.delete('/users/:id', async (req, res) => {
 });
 
 router.patch('/users/:id', async (req, res) => {
-  const update = Object.keys(req.body);
-  const validUpdates = ['name', 'email', 'age'];
-  const isValid = update.every((data) => validUpdates.includes(data));
+  const updates = Object.keys(req.body);
+  const validUpdates = ['name', 'password', 'email', 'age'];
+  const isValid = updates.every((data) => validUpdates.includes(data));
 
   if (!isValid) {
     return res.status(400).send({ error: 'Invalid Updates' });
   }
 
   try {
-    const userUpdate = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const userUpdate = await User.findById(req.params.id);
+
     if (!userUpdate) {
       return res.status(400).send('error: No user found');
     }
+
+    updates.forEach((update) => {
+      userUpdate[update] = req.body[update];
+    });
+    await userUpdate.save();
+
     res.status(200).send(userUpdate);
   } catch (e) {
     res.status(500).send(e);
