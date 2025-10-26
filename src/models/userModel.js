@@ -44,7 +44,7 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-// Middleware
+// Middleware for password
 userSchema.pre('save', async function (next) {
   const user = this;
   if (user.isModified('password')) {
@@ -53,6 +53,19 @@ userSchema.pre('save', async function (next) {
 
   next();
 });
+
+// Middleware for logging
+userSchema.statics.findByCredentials = async function (email, password) {
+  const user = await User.findOne({ email: email });
+  if (!user) {
+    throw new Error('Unable to login');
+  }
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    throw new Error('Unable to login');
+  }
+  return user;
+};
 
 const User = mongoose.model('User', userSchema);
 
