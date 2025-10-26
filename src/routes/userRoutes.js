@@ -8,20 +8,6 @@ router.get('/users/me', auth.auth, async (req, res) => {
   res.send(req.user);
 });
 
-router.get('/users/:id', async (req, res) => {
-  try {
-    const user_id = req.params.id;
-    const user = await User.findById(user_id);
-
-    if (!user) {
-      return res.status(404).send('No user found!');
-    }
-    res.status(200).send(user);
-  } catch (e) {
-    res.status(500).send(e);
-  }
-});
-
 router.post('/users', async (req, res) => {
   try {
     const newUser = new User(req.body);
@@ -49,46 +35,6 @@ router.post('/users/login', async (req, res) => {
   }
 });
 
-router.delete('/users/:id', async (req, res) => {
-  try {
-    const user_id = req.params.id;
-    const userToDelete = await User.findByIdAndDelete(user_id);
-    if (!userToDelete) {
-      return res.status(400).send('No user found!');
-    }
-    res.status(200).send(userToDelete);
-  } catch (e) {
-    res.status(500).send({ Error: e.message });
-  }
-});
-
-router.patch('/users/:id', async (req, res) => {
-  const updates = Object.keys(req.body);
-  const validUpdates = ['name', 'password', 'email', 'age'];
-  const isValid = updates.every((data) => validUpdates.includes(data));
-
-  if (!isValid) {
-    return res.status(400).send({ error: 'Invalid Updates' });
-  }
-
-  try {
-    const userUpdate = await User.findById(req.params.id);
-
-    if (!userUpdate) {
-      return res.status(400).send('error: No user found');
-    }
-
-    updates.forEach((update) => {
-      userUpdate[update] = req.body[update];
-    });
-    await userUpdate.save();
-
-    res.status(200).send(userUpdate);
-  } catch (e) {
-    res.status(500).send(e);
-  }
-});
-
 router.post('/users/logout', auth.auth, async (req, res) => {
   try {
     req.user.tokens = req.user.tokens.filter((token) => {
@@ -109,6 +55,36 @@ router.post('/users/logoutAll', auth.auth, async (req, res) => {
     res.status(200).send(req.user, 'Logged out!');
   } catch (e) {
     res.status(500).send(e.message);
+  }
+});
+
+router.patch('/users/me', auth.auth, async (req, res) => {
+  const updates = Object.keys(req.body);
+  const validUpdates = ['name', 'password', 'email', 'age'];
+  const isValid = updates.every((data) => validUpdates.includes(data));
+
+  if (!isValid) {
+    return res.status(400).send({ error: 'Invalid Updates' });
+  }
+
+  try {
+    updates.forEach((update) => {
+      req.user[update] = req.body[update];
+    });
+    await req.user.save();
+
+    res.status(200).send(req.user);
+  } catch (e) {
+    res.status(500).send(e);
+  }
+});
+
+router.delete('/users/me', auth.auth, async (req, res) => {
+  try {
+    await req.user.deleteOne();
+    res.status(200).send(req.user);
+  } catch (e) {
+    res.status(500).send({ Error: e.message });
   }
 });
 
