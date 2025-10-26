@@ -54,7 +54,6 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Middleware for logging
 userSchema.statics.findByCredentials = async function (email, password) {
   const user = await User.findOne({ email: email });
   if (!user) {
