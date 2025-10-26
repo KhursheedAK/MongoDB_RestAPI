@@ -30,9 +30,10 @@ router.post('/users', async (req, res) => {
   try {
     const newUser = new User(req.body);
     await newUser.save();
+    const token = await newUser.generateAuthToken();
     res
       .status(201)
-      .send({ message: 'User Created successfully', user: newUser });
+      .send({ message: 'User Created successfully', user: newUser, token });
   } catch (e) {
     res.status(400).send(e);
   }
@@ -44,7 +45,9 @@ router.post('/users/login', async (req, res) => {
       req.body.email,
       req.body.password,
     );
-    res.status(200).send(user);
+
+    const token = await user.generateAuthToken();
+    res.status(200).send({ user, token });
   } catch (e) {
     res.status(400).send(e.message);
   }
